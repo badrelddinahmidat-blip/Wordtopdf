@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>وردي PDF — تحويل Word إلى PDF</title>
+<meta name="description" content="حوّل ملفات Word إلى PDF باحترافية ودون أي تغيير في التنسيق، مجاناً ومن المتصفح.">
+<meta name="theme-color" content="#ec4899">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ec4899'/%3E%3Cpath d='M20 14h17l9 9v27H20z' fill='white'/%3E%3Cpath d='M37 14v9h9' fill='%23fbcfe8'/%3E%3Ctext x='33' y='44' font-family='Arial' font-weight='700' font-size='11' fill='%23ec4899' text-anchor='middle'%3EPDF%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pink-50:#fff1f7; --pink-100:#ffe4f0; --pink-200:#fecde3; --pink-300:#fda4cc;
+    --pink-400:#f472b6; --pink-500:#ec4899; --pink-600:#db2777; --pink-700:#be185d;
+    --ink:#4a1d34; --muted:#9d5a7c; --card:rgba(255,255,255,.72); --line:rgba(236,72,153,.18);
+    --ok:#10b981; --err:#e11d48;
+    --shadow:0 20px 60px -20px rgba(219,39,119,.35), 0 8px 24px -12px rgba(219,39,119,.25);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:"Tajawal",system-ui,sans-serif; color:var(--ink);
+    background:linear-gradient(160deg,#fff7fb 0%,#ffe9f3 45%,#ffd9eb 100%);
+    min-height:100vh; overflow-x:hidden;
+  }
+  /* خلفية فقاعات ناعمة */
+  .blob{position:fixed; border-radius:50%; filter:blur(60px); opacity:.55; z-index:0; pointer-events:none; animation:float 18s ease-in-out infinite}
+  .b1{width:420px;height:420px;background:#f9a8d4;top:-120px;right:-100px}
+  .b2{width:360px;height:360px;background:#fbcfe8;bottom:-120px;left:-80px;animation-delay:-6s}
+  .b3{width:260px;height:260px;background:#f0abfc;top:40%;left:55%;opacity:.35;animation-delay:-12s}
+  @keyframes float{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(30px,-25px) scale(1.08)}}
+
+  .wrap{position:relative; z-index:1; max-width:880px; margin:0 auto; padding:28px 16px 60px}
+
+  header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:36px}
+  .brand{display:flex; align-items:center; gap:12px; font-weight:800; font-size:22px}
+  .logo{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--pink-400),var(--pink-600)); box-shadow:0 10px 24px -8px rgba(219,39,119,.6)}
+  .logo svg{width:24px;height:24px}
+  .brand small{display:block; font-weight:500; font-size:13px; color:var(--muted)}
+  .secure{font-size:13px; color:var(--pink-700); background:rgba(255,255,255,.7); border:1px solid var(--line);
+    padding:8px 14px; border-radius:999px; display:flex; align-items:center; gap:6px; white-space:nowrap}
+
+  .hero{text-align:center; margin-bottom:28px}
+  .hero h1{font-size:clamp(30px,6vw,50px); line-height:1.2; margin:0 0 12px; font-weight:800}
+  .hero h1 span{background:linear-gradient(90deg,var(--pink-500),#c026d3); -webkit-background-clip:text; background-clip:text; color:transparent}
+  .hero p{margin:0 auto; max-width:560px; color:var(--muted); font-size:17px; line-height:1.8}
+
+  .card{background:var(--card); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+    border:1px solid rgba(255,255,255,.9); border-radius:28px; box-shadow:var(--shadow); padding:22px}
+
+  .drop{position:relative; border:2.5px dashed var(--pink-300); border-radius:22px; padding:44px 18px 38px;
+    text-align:center; cursor:pointer; transition:.25s; background:linear-gradient(180deg,rgba(255,241,247,.6),rgba(255,255,255,.4))}
+  .drop:hover,.drop.over{border-color:var(--pink-500); background:rgba(255,228,240,.8); transform:translateY(-2px)}
+  .drop.over .docs{transform:scale(1.08)}
+  .docs{display:flex; justify-content:center; align-items:center; gap:14px; margin-bottom:18px; transition:.3s}
+  .doc{width:62px;height:78px;border-radius:10px;position:relative;display:grid;place-items:end center;padding-bottom:12px;
+    font-weight:800;font-size:13px;color:#fff;box-shadow:0 10px 22px -10px rgba(0,0,0,.35)}
+  .doc::after{content:"";position:absolute;top:0;left:0;width:18px;height:18px;background:rgba(255,255,255,.45);border-bottom-right-radius:8px}
+  .doc.w{background:linear-gradient(160deg,#60a5fa,#2563eb); transform:rotate(6deg)}
+  .doc.p{background:linear-gradient(160deg,var(--pink-400),var(--pink-600)); transform:rotate(-6deg)}
+  .arrow{color:var(--pink-500); animation:nudge 1.6s ease-in-out infinite}
+  @keyframes nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(-7px)}}
+  .drop h2{margin:0 0 6px; font-size:22px}
+  .drop p{margin:0 0 20px; color:var(--muted)}
+  .btn{font-family:inherit; border:0; cursor:pointer; border-radius:14px; font-weight:700; font-size:16px;
+    padding:13px 26px; display:inline-flex; align-items:center; gap:8px; transition:.2s; text-decoration:none; white-space:nowrap}
+  .btn-main{color:#fff; background:linear-gradient(135deg,var(--pink-500),var(--pink-600)); box-shadow:0 12px 26px -10px rgba(219,39,119,.7)}
+  .btn-main:hover{transform:translateY(-2px); box-shadow:0 16px 30px -10px rgba(219,39,119,.8)}
+  .btn-soft{color:var(--pink-700); background:var(--pink-100)}
+  .btn-soft:hover{background:var(--pink-200)}
+  .btn-sm{padding:9px 16px; font-size:14px; border-radius:11px}
+  .formats{margin-top:16px; font-size:13px; color:var(--muted)}
+  .formats b{display:inline-block; background:#fff; border:1px solid var(--line); border-radius:8px; padding:2px 8px; margin:0 2px; color:var(--pink-700); font-weight:700; direction:ltr}
+
+  .opts{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-top:16px; padding:0 4px}
+  .toggle{display:flex; align-items:center; gap:10px; cursor:pointer; font-size:14px; color:var(--muted); user-select:none}
+  .toggle input{display:none}
+  .sw{width:42px;height:24px;border-radius:99px;background:var(--pink-200);position:relative;transition:.2s;flex:none}
+  .sw::after{content:"";position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+  .toggle input:checked + .sw{background:var(--pink-500)}
+  .toggle input:checked + .sw::after{right:21px}
+
+  /* قائمة الملفات */
+  #list{display:flex; flex-direction:column; gap:12px; margin-top:18px}
+  .item{background:#fff; border:1px solid var(--line); border-radius:18px; padding:14px 16px; animation:pop .35s ease}
+  @keyframes pop{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
+  .row{display:flex; align-items:center; gap:12px}
+  .ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;flex:none;font-weight:800;font-size:11px;color:#fff;
+    background:linear-gradient(160deg,#60a5fa,#2563eb); transition:.4s}
+  .item.done .ico{background:linear-gradient(160deg,var(--pink-400),var(--pink-600))}
+  .item.error .ico{background:linear-gradient(160deg,#fb7185,#e11d48)}
+  .meta{flex:1; min-width:0}
+  .name{font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; unicode-bidi:plaintext; text-align:right}
+  .sub{font-size:13px; color:var(--muted); margin-top:2px}
+  .item.error .sub{color:var(--err)}
+  .actions{display:flex; gap:8px; flex-wrap:wrap}
+  .bar{height:8px; background:var(--pink-100); border-radius:99px; overflow:hidden; margin-top:12px}
+  .bar i{display:block; height:100%; width:0; border-radius:99px; background:linear-gradient(90deg,var(--pink-400),var(--pink-600)); transition:width .4s ease; position:relative; overflow:hidden}
+  .bar i::after{content:""; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent); animation:shine 1.3s infinite}
+  @keyframes shine{from{transform:translateX(100%)}to{transform:translateX(-100%)}}
+  .item.done .bar,.item.error .bar{display:none}
+  .steps{display:flex; gap:6px; margin-top:10px; font-size:12px; color:var(--muted); flex-wrap:wrap}
+  .steps span{padding:3px 10px; border-radius:99px; background:var(--pink-50); border:1px solid var(--line)}
+  .steps span.on{background:var(--pink-500); color:#fff; border-color:transparent}
+  .item.done .steps,.item.error .steps{display:none}
+  .actions .btn{display:none}
+  .item.done .actions .btn{display:inline-flex}
+  .item.done .actions .retry{display:none}
+  .item.error .actions .retry{display:inline-flex}
+  .spin{width:22px;height:22px;border:3px solid var(--pink-200);border-top-color:var(--pink-500);border-radius:50%;animation:rot .8s linear infinite;flex:none}
+  .item.done .spin,.item.error .spin{display:none}
+  @keyframes rot{to{transform:rotate(360deg)}}
+
+  .features{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:26px}
+  .feat{background:rgba(255,255,255,.6); border:1px solid rgba(255,255,255,.9); border-radius:20px; padding:18px; text-align:center}
+  .feat .fi{width:44px;height:44px;border-radius:14px;margin:0 auto 10px;display:grid;place-items:center;background:var(--pink-100);color:var(--pink-600)}
+  .feat h3{margin:0 0 4px; font-size:16px}
+  .feat p{margin:0; font-size:13px; color:var(--muted); line-height:1.7}
+
+  /* نافذة المعاينة */
+  .modal{position:fixed; inset:0; background:rgba(74,29,52,.55); backdrop-filter:blur(6px); display:none; z-index:50; padding:16px; align-items:center; justify-content:center}
+  .modal.open{display:flex}
+  .sheet{background:#fff; border-radius:22px; width:min(960px,100%); height:min(88vh,1100px); display:flex; flex-direction:column; overflow:hidden; box-shadow:var(--shadow); animation:pop .25s ease}
+  .sheet-top{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 14px; border-bottom:1px solid var(--line)}
+  .sheet-top b{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; unicode-bidi:plaintext}
+  .sheet iframe{flex:1; border:0; width:100%; background:#f5f5f5}
+  .x{width:38px;height:38px;border-radius:12px;border:0;background:var(--pink-100);color:var(--pink-700);cursor:pointer;font-size:20px;flex:none}
+
+  .toast{position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(120px); background:var(--ink); color:#fff; padding:12px 20px; border-radius:14px; font-size:14px; transition:.35s; z-index:60; max-width:calc(100% - 32px); visibility:hidden}
+  .toast.show{transform:translateX(-50%) translateY(0); visibility:visible}
+
+  footer{text-align:center; color:var(--muted); font-size:13px; margin-top:34px}
+  footer .heart{color:var(--pink-500)}
+
+  @media (max-width:640px){
+    header{margin-bottom:24px}
+    .secure{display:none}
+    .features{grid-template-columns:1fr}
+    .drop{padding:34px 14px 30px}
+    .row{flex-wrap:wrap}
+    .actions{width:100%}
+    .actions .btn{flex:1; justify-content:center}
+    .sheet{height:92vh}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 14l2 2 4-4"/></svg></div>
+      <div>وردي PDF<small>محوّل Word إلى PDF</small></div>
+    </div>
+    <div class="secure">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      ملفاتك تُحذف تلقائياً
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1>حوّل <span>Word إلى PDF</span><br>كما هو تماماً</h1>
+    <p>نفس الخطوط والجداول والصور والهوامش والنص العربي — تحويل احترافي بجودة برامج Office، بدون حذف أو تعديل أي شيء.</p>
+  </section>
+
+  <main class="card">
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="اختر ملف Word">
+      <div class="docs">
+        <div class="doc w">DOC</div>
+        <svg class="arrow" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/></svg>
+        <div class="doc p">PDF</div>
+      </div>
+      <h2>اسحب ملف Word وأفلته هنا</h2>
+      <p>أو اضغط لاختيار ملف من جهازك — يمكنك اختيار عدة ملفات</p>
+      <span class="btn btn-main">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="M6 10l6-6 6 6"/><path d="M4 20h16"/></svg>
+        اختر الملفات
+      </span>
+      <div class="formats">الصيغ المدعومة: <b>.docx</b><b>.doc</b><b>.rtf</b><b>.odt</b></div>
+      <input type="file" id="file" accept=".docx,.doc,.rtf,.odt,.dotx,.dot,.docm,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword" multiple hidden>
+    </div>
+
+    <div class="opts">
+      <label class="toggle"><input type="checkbox" id="pdfa"><span class="sw"></span> PDF/A للأرشفة الرسمية</label>
+      <label class="toggle"><input type="checkbox" id="auto" checked><span class="sw"></span> تنزيل تلقائي بعد التحويل</label>
+    </div>
+
+    <div id="list" aria-live="polite"></div>
+  </main>
+
+  <section class="features">
+    <div class="feat">
+      <div class="fi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+      <h3>بدون فقدان التنسيق</h3><p>كل عنصر في مكانه: خطوط، جداول، صور، رؤوس وتذييلات وترقيم.</p>
+    </div>
+    <div class="feat">
+      <div class="fi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h10M4 17h16"/></svg></div>
+      <h3>عربي مثالي</h3><p>اتجاه النص من اليمين لليسار والتشكيل والخطوط العربية كما هي.</p>
+    </div>
+    <div class="feat">
+      <div class="fi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+      <h3>آمن وخاص</h3><p>اتصال مشفّر، والملفات تُحذف تلقائياً من الخادم خلال ساعات.</p>
+    </div>
+  </section>
+
+  <footer>صُنع بـ <span class="heart">♥</span> — وردي PDF</footer>
+</div>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <div class="sheet-top">
+      <b id="mname"></b>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-main btn-sm" id="mdl">تنزيل</button>
+        <button class="x" id="mclose" aria-label="إغلاق">×</button>
+      </div>
+    </div>
+    <iframe id="frame" title="معاينة PDF"></iframe>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const API = "/api/convert";
+  const UPLOAD = "https://v2.convertapi.com/upload";
+  const OK_EXT = ["docx","doc","rtf","odt","dotx","dot","docm"];
+  const MAX_MB = 100;
+  const SERVER_UPLOAD_MAX = 5.5 * 1024 * 1024; // حد جسم الطلب في دوال Netlify
+
+  const $ = (s) => document.querySelector(s);
+  const drop = $("#drop"), input = $("#file"), list = $("#list");
+  let queue = Promise.resolve();
+
+  const fmtSize = (b) => b < 1024*1024 ? (b/1024).toFixed(0) + " KB" : (b/1024/1024).toFixed(1) + " MB";
+  const extOf = (n) => (n.split(".").pop() || "").toLowerCase();
+  const pdfName = (n) => n.replace(/\.[^.]+$/, "") + ".pdf";
+  const esc = (s) => s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+  function toast(msg){
+    const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+    clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 3500);
+  }
+
+  // ====== اختيار الملفات ======
+  drop.addEventListener("click", () => input.click());
+  drop.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); } });
+  input.addEventListener("change", () => { handle(input.files); input.value = ""; });
+  ["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", e => handle(e.dataTransfer.files));
+  window.addEventListener("dragover", e => e.preventDefault());
+  window.addEventListener("drop", e => e.preventDefault());
+
+  function handle(files){
+    [...files].forEach(f => {
+      const ext = extOf(f.name);
+      if (!OK_EXT.includes(ext)) return toast(`«${f.name}» ليس ملف Word`);
+      if (f.size > MAX_MB*1024*1024) return toast(`«${f.name}» أكبر من ${MAX_MB} ميغابايت`);
+      if (f.size === 0) return toast(`«${f.name}» ملف فارغ`);
+      const ui = makeItem(f);
+      queue = queue.then(() => convert(f, ui)).catch(() => {});
+    });
+  }
+
+  // ====== بطاقة الملف ======
+  function makeItem(file){
+    const el = document.createElement("div");
+    el.className = "item";
+    el.innerHTML = `
+      <div class="row">
+        <div class="ico">${esc(extOf(file.name).toUpperCase())}</div>
+        <div class="meta"><div class="name" title="${esc(file.name)}">${esc(file.name)}</div><div class="sub">${fmtSize(file.size)} · في الانتظار…</div></div>
+        <div class="spin"></div>
+        <div class="actions">
+          <button class="btn btn-soft btn-sm preview">معاينة</button>
+          <button class="btn btn-main btn-sm download">تنزيل PDF</button>
+          <button class="btn btn-soft btn-sm retry">إعادة المحاولة</button>
+        </div>
+      </div>
+      <div class="bar"><i></i></div>
+      <div class="steps"><span data-s="1">رفع الملف</span><span data-s="2">التحويل</span><span data-s="3">تجهيز PDF</span></div>`;
+    list.prepend(el);
+    const ui = {
+      el, file,
+      sub: (t) => el.querySelector(".sub").textContent = t,
+      bar: (p) => el.querySelector(".bar i").style.width = Math.max(3, Math.min(100, p)) + "%",
+      step: (n) => el.querySelectorAll(".steps span").forEach(s => s.classList.toggle("on", +s.dataset.s <= n)),
+    };
+    el.querySelector(".retry").onclick = () => {
+      el.classList.remove("error");
+      queue = queue.then(() => convert(file, ui)).catch(() => {});
+    };
+    return ui;
+  }
+
+  // ====== التحويل ======
+  async function convert(file, ui){
+    const ext = extOf(file.name);
+    try {
+      ui.step(1); ui.sub(`${fmtSize(file.size)} · جارٍ رفع الملف…`); ui.bar(2);
+      const fileId = await upload(file, p => ui.bar(p * 40));
+
+      ui.step(2); ui.sub(`${fmtSize(file.size)} · جارٍ التحويل بمحرّك Office…`); ui.bar(45);
+      const start = await api(API + "?action=start", {
+        method: "POST", headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ fileId, ext, pdfa: $("#pdfa").checked })
+      });
+
+      const result = await poll(start.jobId, ui);
+
+      ui.step(3); ui.sub("جارٍ تجهيز ملف PDF…"); ui.bar(95);
+      const name = pdfName(file.name);
+      let blob = null;
+      try {
+        const r = await fetch(result.url);
+        if (r.ok) blob = await r.blob();
+      } catch (_) {}
+      if (blob) blob = new Blob([blob], { type: "application/pdf" });
+
+      done(ui, { name, blob, url: result.url, size: blob ? blob.size : result.size });
+    } catch (err) {
+      ui.el.classList.add("error");
+      ui.sub(err.message || "تعذّر التحويل، حاول مرة أخرى.");
+    }
+  }
+
+  // رفع مباشر إلى خادم التحويل مع شريط تقدم، ثم رفع احتياطي عبر Netlify
+  function upload(file, onProgress){
+    return new Promise((resolve, reject) => {
+      const fd = new FormData();
+      fd.append("file", file, file.name);
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", UPLOAD + "?filename=" + encodeURIComponent(file.name));
+      xhr.upload.onprogress = e => e.lengthComputable && onProgress(e.loaded / e.total);
+      xhr.onload = () => {
+        try {
+          const j = JSON.parse(xhr.responseText);
+          if (xhr.status >= 200 && xhr.status < 300 && j.FileId) return resolve(j.FileId);
+        } catch (_) {}
+        fallback();
+      };
+      xhr.onerror = fallback;
+      xhr.send(fd);
+
+      async function fallback(){
+        if (file.size > SERVER_UPLOAD_MAX) return reject(new Error("تعذّر رفع الملف، تحقق من الاتصال وحاول مجدداً."));
+        try {
+          const j = await api(API + "?action=upload", {
+            method: "POST",
+            headers: {"Content-Type":"application/octet-stream", "X-File-Name": encodeURIComponent(file.name)},
+            body: file
+          });
+          onProgress(1); resolve(j.fileId);
+        } catch (e) { reject(e); }
+      }
+    });
+  }
+
+  async function poll(jobId, ui){
+    const started = Date.now();
+    let p = 45;
+    while (Date.now() - started < 20 * 60 * 1000) {
+      await new Promise(r => setTimeout(r, 1500));
+      const s = await api(API + "?action=status&job=" + encodeURIComponent(jobId));
+      if (s.status === "done") return s;
+      if (s.status === "error") throw new Error(s.error || "فشل التحويل.");
+      p = Math.min(90, p + (90 - p) * 0.12); ui.bar(p);
+    }
+    throw new Error("استغرق التحويل وقتاً طويلاً، حاول مرة أخرى.");
+  }
+
+  async function api(url, opts){
+    let r;
+    try { r = await fetch(url, opts); }
+    catch (_) { throw new Error("لا يوجد اتصال بالخادم."); }
+    let j = {};
+    try { j = await r.json(); } catch (_) {}
+    if (!r.ok || j.error && j.status !== "error") throw new Error(j.error || "خطأ في الخادم (" + r.status + ")");
+    return j;
+  }
+
+  // ====== النتيجة ======
+  function done(ui, res){
+    ui.bar(100);
+    ui.el.classList.add("done");
+    ui.el.querySelector(".ico").textContent = "PDF";
+    ui.el.querySelector(".name").textContent = res.name;
+    ui.sub(`تم التحويل بنجاح ✓ · ${res.size ? fmtSize(res.size) : "PDF"}`);
+
+    const objUrl = res.blob ? URL.createObjectURL(res.blob) : null;
+    const save = () => {
+      if (objUrl) {
+        const a = document.createElement("a");
+        a.href = objUrl; a.download = res.name;
+        document.body.appendChild(a); a.click(); a.remove();
+      } else {
+        window.open(res.url, "_blank", "noopener");
+      }
+    };
+    ui.el.querySelector(".download").onclick = save;
+    ui.el.querySelector(".preview").onclick = () => {
+      if (!objUrl) return window.open(res.url, "_blank", "noopener");
+      $("#mname").textContent = res.name;
+      $("#frame").src = objUrl;
+      $("#mdl").onclick = save;
+      $("#modal").classList.add("open");
+    };
+    if ($("#auto").checked) save();
+    toast("تم تحويل «" + res.name + "» بنجاح 🎀");
+  }
+
+  const closeModal = () => { $("#modal").classList.remove("open"); $("#frame").src = "about:blank"; };
+  $("#mclose").onclick = closeModal;
+  $("#modal").addEventListener("click", e => { if (e.target.id === "modal") closeModal(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+})();
+</script>
+</body>
+</html>

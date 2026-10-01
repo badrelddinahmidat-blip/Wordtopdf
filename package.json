@@ -1,0 +1,8 @@
+{
+  "name": "word-to-pdf-pink",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "تحويل ملفات Word إلى PDF بجودة Office — جاهز للنشر على Netlify",
+  "engines": { "node": ">=18" }
+}
